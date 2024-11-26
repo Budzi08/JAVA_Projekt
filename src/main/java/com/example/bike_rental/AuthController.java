@@ -3,36 +3,47 @@ package com.example.bike_rental;
 import com.example.bike_rental.model.User;
 import com.example.bike_rental.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtService jwtService;
+    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
+                          PasswordEncoder passwordEncoder, JwtService jwtService) {
+        this.authenticationManager = authenticationManager;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+    }
 
     @PostMapping("/register")
-    public String register(@RequestBody RegistrationRequest request) {
+    public ResponseEntity<?> register(@RequestBody RegistrationRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            return "User already exists";
+            return ResponseEntity.badRequest().body(Map.of("message", "User already exists"));
         }
 
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return "Passwords do not match";
+            return ResponseEntity.badRequest().body(Map.of("message", "Passwords do not match"));
         }
 
         User user = new User();
@@ -44,24 +55,62 @@ public class AuthController {
         user.setRole("ROLE_USER");
         userRepository.save(user);
 
-        return "User registered successfully";
+        return ResponseEntity.ok(Map.of("message", "User registered successfully"));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        // Authenticate user
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getUsername(),
+                        loginRequest.getPassword()
+                )
+        );
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
-        }
+        // Set authentication in security context
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        List<String> roles = List.of(user.getRole()); // Pobieramy role użytkownika
-        String token = jwtService.generateToken(user.getUsername(), roles);
+        // Generate JWT token
+        String jwtToken = jwtService.generateToken(
+                loginRequest.getUsername(),
+                getRolesFromAuthentication(authentication)
+        );
 
-        Map<String, String> response = new HashMap<>();
-        response.put("token", token);
-        return ResponseEntity.ok(response);
+        // Set token as HttpOnly cookie
+        ResponseCookie cookie = ResponseCookie.from("jwtToken", jwtToken)
+                .httpOnly(true)
+                .secure(false) // Change to true in production with HTTPS
+                .path("/")
+                .maxAge(10 * 60 * 60) // 10 hours
+                .build();
+
+        // Return response with cookie
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(Map.of("message", "Login successful"));
+    }
+
+    private List<String> getRolesFromAuthentication(Authentication authentication) {
+        // Get roles from authentication object
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        // Ustawienie pustego ciasteczka jwtToken
+        ResponseCookie cookie = ResponseCookie.from("jwtToken", "")
+                .httpOnly(true)
+                .secure(false) // Ustaw na true w środowisku produkcyjnym z HTTPS
+                .path("/")
+                .maxAge(0) // Ustawienie czasu życia na 0 usunie ciasteczko
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(Map.of("message", "Logout successful"));
     }
 
 }
