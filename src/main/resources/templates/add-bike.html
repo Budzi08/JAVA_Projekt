@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Dodaj Rower</title>
+</head>
+<body>
+<h1>Dodaj Nowy Rower</h1>
+<form id="addBikeForm">
+  <label for="model">Model:</label>
+  <input type="text" id="model" name="model" required><br><br>
+
+  <label for="type">Typ Roweru:</label>
+  <select id="type" name="type" required>
+    <option value="Górski">Górski</option>
+    <option value="Elektryczny">Elektryczny</option>
+    <option value="Miejski">Miejski</option>
+    <option value="Szosowy">Szosowy</option>
+  </select><br><br>
+
+  <label for="productionYear">Rok Produkcji:</label>
+  <input type="number" id="productionYear" name="productionYear" min="1900" max="2100" required><br><br>
+
+  <label for="rentalPrice">Cena za Wynajem (za godzinę):</label>
+  <input type="number" id="rentalPrice" name="rentalPrice" step="0.01" required><br><br>
+
+  <label for="status">Stan:</label>
+  <select id="status" name="status" required>
+    <option value="Dostępny">Dostępny</option>
+    <option value="Niedostępny">Niedostępny</option>
+  </select><br><br>
+
+  <label for="image">Zdjęcie:</label>
+  <input type="file" id="image" name="image" accept="image/*"><br><br>
+
+  <button type="submit">Dodaj Rower</button>
+</form>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('jwtToken');
+
+    // Sprawdzenie, czy użytkownik jest zalogowany
+    if (!token) {
+      alert('Brak autoryzacji. Zaloguj się ponownie.');
+      window.location.href = '/login';
+      return;
+    }
+
+    // Obsługa formularza dodawania roweru
+    document.getElementById('addBikeForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const formData = new FormData();
+      formData.append('model', document.getElementById('model').value);
+      formData.append('type', document.getElementById('type').value);
+      formData.append('productionYear', document.getElementById('productionYear').value);
+      formData.append('rentalPrice', document.getElementById('rentalPrice').value);
+      formData.append('status', document.getElementById('status').value);
+
+      const imageFile = document.getElementById('image').files[0];
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+
+      const response = await fetch('/api/bikes/add', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}` // Token JWT w nagłówku
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        alert('Rower został dodany pomyślnie!');
+        window.location.href = '/admin/add-bike';
+      } else {
+        alert('Błąd podczas dodawania roweru.');
+      }
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+</head>
+<body>
+<h1>Login</h1>
+<form id="loginForm">
+  <label for="username">Username:</label>
+  <input type="text" id="username" name="username" required><br><br>
+
+  <label for="password">Password:</label>
+  <input type="password" id="password" name="password" required><br><br>
+
+  <button type="submit">Login</button>
+
+  <div id="errorMessage" style="color: red; display: none;">
+    Invalid username or password.
+  </div>
+</form>
+
+<script>
+  document.getElementById('loginForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const loginData = {
+      username: document.getElementById('username').value,
+      password: document.getElementById('password').value
+    };
+
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(loginData)
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      localStorage.setItem('jwtToken', result.token); // Zapisz token do localStorage
+      alert('Login successful!');
+      window.location.href = '/admin/add-bike'; // Przekierowanie po zalogowaniu
+    } else {
+      document.getElementById('errorMessage').style.display = 'block';
+    }
+  });
+</script>
+</body>
+</html>
