@@ -1,33 +1,19 @@
-package com.example.bike_rental.model;
+package com.example.bike_rental.dto;
 
-import jakarta.persistence.*;
-import java.io.Serializable;
-import java.util.List;
-
-@Entity
-public class Bike implements Serializable {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+public class BikeResponse {
     private String model;
-
-    @Enumerated(EnumType.STRING)
-    private BikeType type;
-
+    private String type;
     private int productionYear;
-
     private double rentalPrice;
 
-    public Long getId() {
-        return id;
+    public BikeResponse(String model, String type, int productionYear, double rentalPrice) {
+        this.model = model;
+        this.type = type;
+        this.productionYear = productionYear;
+        this.rentalPrice = rentalPrice;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
+    // Gettery i settery
     public String getModel() {
         return model;
     }
@@ -36,11 +22,11 @@ public class Bike implements Serializable {
         this.model = model;
     }
 
-    public BikeType getType() {
+    public String getType() {
         return type;
     }
 
-    public void setType(BikeType type) {
+    public void setType(String type) {
         this.type = type;
     }
 
@@ -60,3 +46,4 @@ public class Bike implements Serializable {
         this.rentalPrice = rentalPrice;
     }
 }
+

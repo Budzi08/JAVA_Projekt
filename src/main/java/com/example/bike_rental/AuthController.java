@@ -3,14 +3,10 @@ package com.example.bike_rental;
 import com.example.bike_rental.model.User;
 import com.example.bike_rental.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,28 +18,26 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
-                          PasswordEncoder passwordEncoder, JwtService jwtService) {
-        this.authenticationManager = authenticationManager;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
-    }
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtService jwtService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegistrationRequest request) {
+    public String register(@RequestBody RegistrationRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "User already exists"));
+            return "User already exists";
         }
 
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Passwords do not match"));
+            return "Passwords do not match";
         }
 
         User user = new User();
@@ -55,21 +49,18 @@ public class AuthController {
         user.setRole("ROLE_USER");
         userRepository.save(user);
 
-        return ResponseEntity.ok(Map.of("message", "User registered successfully"));
+        return "User registered successfully";
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         // Authenticate user
-        Authentication authentication = authenticationManager.authenticate(
+        var authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
                         loginRequest.getPassword()
                 )
         );
-
-        // Set authentication in security context
-        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         // Generate JWT token
         String jwtToken = jwtService.generateToken(
@@ -77,43 +68,17 @@ public class AuthController {
                 getRolesFromAuthentication(authentication)
         );
 
-        // Set token as HttpOnly cookie
-        ResponseCookie cookie = ResponseCookie.from("jwtToken", jwtToken)
-                .httpOnly(true)
-                .secure(false) // Change to true in production with HTTPS
-                .path("/")
-                .maxAge(10 * 60 * 60) // 10 hours
-                .build();
-
-        // Return response with cookie
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(Map.of("message", "Login successful"));
+        // Return token in response body
+        return ResponseEntity.ok(Map.of("token", jwtToken));
     }
 
-    private List<String> getRolesFromAuthentication(Authentication authentication) {
-        // Get roles from authentication object
+    private List<String> getRolesFromAuthentication(org.springframework.security.core.Authentication authentication) {
         return authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
     }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        // Ustawienie pustego ciasteczka jwtToken
-        ResponseCookie cookie = ResponseCookie.from("jwtToken", "")
-                .httpOnly(true)
-                .secure(false) // Ustaw na true w środowisku produkcyjnym z HTTPS
-                .path("/")
-                .maxAge(0) // Ustawienie czasu życia na 0 usunie ciasteczko
-                .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(Map.of("message", "Logout successful"));
-    }
-
 }
+
 
 
 class RegistrationRequest {

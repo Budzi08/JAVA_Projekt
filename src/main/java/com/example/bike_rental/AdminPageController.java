@@ -10,6 +10,6 @@ public class AdminPageController {
 
     @GetMapping("/add-bike")
     public String showAddBikePage() {
-        return "add-bike"; // Nazwa pliku w katalogu templates
+        return "add-bike";
     }
 }

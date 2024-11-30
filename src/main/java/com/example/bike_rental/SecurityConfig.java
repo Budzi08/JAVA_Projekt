@@ -26,20 +26,15 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/", "/login", "/register").permitAll()
-                        .requestMatchers("/add-bike").hasRole("ADMIN")
-                        .requestMatchers("/api/bikes/**").hasRole("ADMIN")
+                        .requestMatchers("/", "/login", "/register", "/error").permitAll()
+                        .requestMatchers("/api/bikes/edit/**", "/api/users/all", "/api/bikes/**", "/add-bike", "/api/rentals/admin", "/api/bikes/delete/**", "/api/users/delete/**").hasRole("ADMIN")
+                        .requestMatchers("/api/rentals/rent", "/api/rentals/user").hasRole("USER")
+                        .requestMatchers("/api/bikes").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .logout(logout -> logout
-                        .logoutUrl("/api/auth/logout") // Endpoint wylogowania
-                        .logoutSuccessUrl("/login") // Strona przekierowania po wylogowaniu
-                        .deleteCookies("jwtToken") // Usuwanie ciasteczka JWT
-                        .permitAll()
-                )
-                .headers(headers -> headers.defaultsDisabled().frameOptions(frameOptions -> frameOptions.sameOrigin()));
-
+                .formLogin(form -> form.disable())
+                .logout(logout -> logout.disable());
         return http.build();
     }
 
