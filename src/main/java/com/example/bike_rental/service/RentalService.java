@@ -7,6 +7,7 @@ import com.example.bike_rental.model.User;
 import com.example.bike_rental.repository.BikeRepository;
 import com.example.bike_rental.repository.RentalRepository;
 import com.example.bike_rental.repository.UserRepository;
+import com.example.bike_rental.util.QRCodeGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,13 +25,15 @@ public class RentalService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private EmailService emailService;
 
     public List<String> getBikeModelsByType(String type) {
         List<Bike> bikes = bikeRepository.findByType(type);
         return bikes.stream().map(Bike::getModel).collect(Collectors.toList());
     }
 
-    public void addRental(RentalRequest rentalRequest, String username) {
+    public void addRental(RentalRequest rentalRequest, String username) throws Exception {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Użytkownik nie został znaleziony"));
 
@@ -39,11 +42,27 @@ public class RentalService {
 
         Rental rental = new Rental();
         rental.setBike(bike);
-        rental.setUser(user); // Ustaw użytkownika
+        rental.setUser(user);
         rental.setStartDateTime(rentalRequest.getStartDateTime());
         rental.setEndDateTime(rentalRequest.getEndDateTime());
 
         rentalRepository.save(rental);
+
+
+        String rentalData = String.format(
+                "Wypożyczenie: ID=%d, Użytkownik=%s, Rower=%s, Od=%s, Do=%s",
+                rental.getId(), user.getUsername(), bike.getModel(),
+                rental.getStartDateTime(), rental.getEndDateTime()
+        );
+
+        byte[] qrCode = QRCodeGenerator.generateQRCode(rentalData, 300, 300);
+
+        emailService.sendEmailWithQRCode(
+                user.getEmail(),
+                "Potwierdzenie wypożyczenia roweru",
+                "Twoje wypożyczenie zostało zarejestrowane. Szczegóły w załączniku.",
+                qrCode
+        );
     }
 
     public List<Rental> getRentalsByUsername(String username) {
