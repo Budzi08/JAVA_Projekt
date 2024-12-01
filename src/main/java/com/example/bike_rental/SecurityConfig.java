@@ -27,6 +27,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/", "/login", "/register", "/error").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-resources/**", "/webjars/**").permitAll()
                         .requestMatchers("/api/bikes/edit/**", "/api/users/all", "/api/bikes/**", "/add-bike", "/api/rentals/admin", "/api/bikes/delete/**", "/api/users/delete/**").hasRole("ADMIN")
                         .requestMatchers("/api/rentals/rent", "/api/rentals/user").hasRole("USER")
                         .requestMatchers("/api/bikes").authenticated()
