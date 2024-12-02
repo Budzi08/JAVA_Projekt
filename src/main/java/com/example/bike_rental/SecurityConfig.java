@@ -26,7 +26,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/", "/login", "/register", "/error").permitAll()
+                        .requestMatchers("/", "/login", "/register", "/error", "/favicon.ico").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-resources/**", "/webjars/**").permitAll()
                         .requestMatchers("/api/bikes/edit/**", "/api/users/all", "/api/bikes/**", "/add-bike", "/api/rentals/admin", "/api/bikes/delete/**", "/api/users/delete/**").hasRole("ADMIN")
                         .requestMatchers("/api/rentals/rent", "/api/rentals/user").hasRole("USER")
