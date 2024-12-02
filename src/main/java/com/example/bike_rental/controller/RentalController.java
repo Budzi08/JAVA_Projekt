@@ -6,12 +6,15 @@ import com.example.bike_rental.model.Rental;
 import com.example.bike_rental.model.User;
 import com.example.bike_rental.repository.BikeRepository;
 import com.example.bike_rental.repository.RentalRepository;
+import com.example.bike_rental.service.EmailService;
 import com.example.bike_rental.service.RentalService;
 import com.example.bike_rental.service.UserService;
+import com.example.bike_rental.util.QRCodeGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +32,9 @@ public class RentalController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private EmailService emailService;
+
     @PostMapping("/rent")
     public ResponseEntity<?> rentBike(@RequestBody RentalRequest rentalRequest, Authentication authentication) {
         User user = userService.findUserByUsername(authentication.getName());
@@ -44,6 +50,26 @@ public class RentalController {
         );
 
         rentalRepository.save(rental);
+
+        try {
+            String subject = "Potwierdzenie wypożyczenia";
+            String text = "Twoje wypożyczenie roweru zostało potwierdzone:\n\n"
+                    + "Rower: " + rental.getBike().getModel() + ", Typ: " + rental.getBike().getType() + ", Cena: " + rental.getBike().getRentalPrice() + " PLN/h\n"
+                    + "Czas: " + rental.getStartDateTime() + " - " + rental.getEndDateTime() + "\n"
+                    + "Użytkownik: " + user.getFirstName() + " " + user.getLastName() + "\n";
+
+            String qrData = "Wypożyczenie ID: " + rental.getId() + "\n"
+                    + "Rower: " + rental.getBike().getModel() + ", Typ: " + rental.getBike().getType() + ", Cena: " + rental.getBike().getRentalPrice() + " PLN/h\n"
+                    + "Czas: " + rental.getStartDateTime() + " - " + rental.getEndDateTime() + "\n"
+                    + "Użytkownik: " + user.getFirstName() + " " + user.getLastName() + "\n"
+                    + "Darmowe 5 z JAVY: https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+
+            byte[] qrCode = QRCodeGenerator.generateQRCode(qrData, 200, 200);
+            emailService.sendEmailWithQRCode(user.getEmail(), subject, text, qrCode);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
 
         return ResponseEntity.ok(Map.of("message", "Wypożyczono rower!"));
     }
@@ -62,4 +88,15 @@ public class RentalController {
         List<Rental> rentals = rentalService.getAllRentals();
         return ResponseEntity.ok(rentals);
     }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteRental(@PathVariable Long id) {
+        Rental rental = rentalRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono wypożyczenia"));
+
+        rentalRepository.delete(rental);
+
+        return ResponseEntity.ok(Map.of("message", "Wypożyczenie zostało usunięte!"));
+    }
+
 }

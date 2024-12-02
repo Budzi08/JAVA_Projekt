@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class QRCodeGenerator {
-
     public static byte[] generateQRCode(String data, int width, int height) throws Exception {
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
         Map<EncodeHintType, Object> hints = new HashMap<>();
@@ -32,3 +31,4 @@ public class QRCodeGenerator {
         return outputStream.toByteArray();
     }
 }
+
