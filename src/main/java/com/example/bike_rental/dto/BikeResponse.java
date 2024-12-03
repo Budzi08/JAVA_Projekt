@@ -13,7 +13,6 @@ public class BikeResponse {
         this.rentalPrice = rentalPrice;
     }
 
-    // Gettery i settery
     public String getModel() {
         return model;
     }
