@@ -71,7 +71,7 @@ public class RentalController {
         }
 
 
-        return ResponseEntity.ok(Map.of("message", "Wypożyczono rower!"));
+        return ResponseEntity.ok("Wypożyczono rower!");
     }
 
     @Autowired
@@ -96,7 +96,7 @@ public class RentalController {
 
         rentalRepository.delete(rental);
 
-        return ResponseEntity.ok(Map.of("message", "Wypożyczenie zostało usunięte!"));
+        return ResponseEntity.ok("Wypożyczenie zostało usunięte!");
     }
 
 }

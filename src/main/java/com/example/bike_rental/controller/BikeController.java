@@ -45,7 +45,7 @@ public class BikeController {
                     bikeRequest.getProductionYear(),
                     bikeRequest.getRentalPrice()
             );
-            return ResponseEntity.ok("Rower został dodany pomyślnie!");
+            return ResponseEntity.ok("Rower został dodany!");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Nieprawidłowy typ roweru.");
         } catch (Exception e) {

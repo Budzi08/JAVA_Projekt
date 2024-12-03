@@ -35,7 +35,7 @@ public class RentalService {
 
     public void addRental(RentalRequest rentalRequest, String username) throws Exception {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Użytkownik nie został znaleziony"));
+                .orElseThrow(() -> new IllegalArgumentException("Użytkwnik nie został znaleziony"));
 
         Bike bike = bikeRepository.findById(rentalRequest.getBikeId())
                 .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono roweru o podanym ID"));
@@ -60,7 +60,7 @@ public class RentalService {
         emailService.sendEmailWithQRCode(
                 user.getEmail(),
                 "Potwierdzenie wypożyczenia roweru",
-                "Twoje wypożyczenie zostało zarejestrowane. Szczegóły w załączniku.",
+                "Twoje wypożyczenie zostało potwierdzone",
                 qrCode
         );
     }

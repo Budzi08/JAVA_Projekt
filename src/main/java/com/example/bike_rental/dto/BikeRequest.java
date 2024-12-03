@@ -6,7 +6,7 @@ public class BikeRequest {
     private int productionYear;
     private double rentalPrice;
 
-    // Gettery i settery
+
     public String getModel() {
         return model;
     }
