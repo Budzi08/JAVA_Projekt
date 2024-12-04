@@ -3,6 +3,8 @@ package com.example.bike_rental;
 import com.example.bike_rental.model.User;
 import com.example.bike_rental.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -20,7 +22,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test") // Aktywowanie konfiguracji testowej
 public class AuthControllerIntegrationTest {
 
     @Autowired
@@ -34,6 +35,12 @@ public class AuthControllerIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @BeforeEach
+    void setup() {
+        // czyszczenie bazy przed kazdym testem
+        userRepository.deleteAll();
+    }
 
     @Test
     void registerUserSuccessfully() throws Exception {

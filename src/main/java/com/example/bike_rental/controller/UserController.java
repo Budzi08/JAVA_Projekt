@@ -26,9 +26,11 @@ public class UserController {
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        var user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Użytkownik o podanym ID nie istnieje"));
-
+        var userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("Użytkownik o podanym ID nie istnieje");
+        }
+        var user = userOpt.get();
         if (rentalRepository.existsByUser(user)) {
             return ResponseEntity.badRequest().body("Nie można usunąć użytkownika, ponieważ ma wypożyczenia.");
         }

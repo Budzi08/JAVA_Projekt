@@ -67,6 +67,7 @@ public class BikeControllerIntegrationTests {
         // czyszczenie bazy przed kazdym testem
         rentalRepository.deleteAll();
         bikeRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test
@@ -83,7 +84,7 @@ public class BikeControllerIntegrationTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bikeRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Rower został dodany pomyślnie!"));
+                .andExpect(content().string("Rower został dodany!"));
 
         // Weryfikacja w bazie danych
         List<Bike> bikes = bikeRepository.findAll();

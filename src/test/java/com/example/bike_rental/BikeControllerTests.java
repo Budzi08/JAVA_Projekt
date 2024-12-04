@@ -66,7 +66,7 @@ public class BikeControllerTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bikeRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Rower został dodany pomyślnie!"));
+                .andExpect(content().string("Rower został dodany!"));
     }
 
     @Test
@@ -90,7 +90,6 @@ public class BikeControllerTests {
         Bike bike = new Bike();
         bike.setId(bikeId);
 
-        // Mockowanie repozytoriów
         Mockito.when(bikeRepository.findById(bikeId)).thenReturn(java.util.Optional.of(bike));
         Mockito.when(rentalRepository.existsByBike(bike)).thenReturn(false); // Brak wypożyczenia
 
@@ -105,10 +104,10 @@ public class BikeControllerTests {
         Long bikeId = 1L;
         Bike bike = new Bike();
         bike.setId(bikeId);
-        
-        // Mockowanie repozytoriów
+
+        //symulacja zachowania repozytorium
         Mockito.when(bikeRepository.findById(bikeId)).thenReturn(java.util.Optional.of(bike));
-        Mockito.when(rentalRepository.existsByBike(bike)).thenReturn(true); // Rower jest wypożyczony
+        Mockito.when(rentalRepository.existsByBike(bike)).thenReturn(true); // rower wypożyczony
 
         // Wykonanie testu
         mockMvc.perform(delete("/api/bikes/delete/{id}", bikeId))
@@ -125,7 +124,6 @@ public class BikeControllerTests {
         bikeDetails.setProductionYear(2023);
         bikeDetails.setRentalPrice(35.0);
 
-        // Mockowanie repozytoriów
         Mockito.when(bikeRepository.findById(bikeId)).thenReturn(java.util.Optional.of(new Bike()));
 
         // Wykonanie testu
