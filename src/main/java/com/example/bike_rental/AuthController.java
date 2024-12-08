@@ -33,11 +33,11 @@ public class AuthController {
     @PostMapping("/register")
     public String register(@RequestBody RegistrationRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            return "User already exists";
+            return "Użytkownik o podanej nazwie już istnieje";
         }
 
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return "Passwords do not match";
+            return "Hasła się nie zgadzają!";
         }
 
         User user = new User();
@@ -49,12 +49,11 @@ public class AuthController {
         user.setRole("ROLE_USER");
         userRepository.save(user);
 
-        return "User registered successfully";
+        return "Użytkownik pomyslnie zarejestrowany";
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        // Authenticate user
         var authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
@@ -62,13 +61,11 @@ public class AuthController {
                 )
         );
 
-        // Generate JWT token
         String jwtToken = jwtService.generateToken(
                 loginRequest.getUsername(),
                 getRolesFromAuthentication(authentication)
         );
 
-        // Return token in response body
         return ResponseEntity.ok(Map.of("token", jwtToken));
     }
 
@@ -142,7 +139,6 @@ class LoginRequest {
     private String username;
     private String password;
 
-    // Gettery i settery
     public String getUsername() {
         return username;
     }

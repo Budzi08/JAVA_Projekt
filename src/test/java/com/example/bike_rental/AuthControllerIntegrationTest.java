@@ -1,6 +1,7 @@
 package com.example.bike_rental;
 
 import com.example.bike_rental.model.User;
+import com.example.bike_rental.repository.RentalRepository;
 import com.example.bike_rental.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -35,10 +36,13 @@ public class AuthControllerIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private RentalRepository rentalRepository;
 
     @BeforeEach
     void setup() {
         // czyszczenie bazy przed kazdym testem
+        rentalRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -61,7 +65,7 @@ public class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
-                .andExpect(content().string("User registered successfully"));
+                .andExpect(content().string("Użytkownik pomyslnie zarejestrowany"));
 
         // Weryfikacja w bazie danych
         User savedUser = userRepository.findByUsername("testuser").orElse(null);
@@ -89,7 +93,7 @@ public class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Passwords do not match"));
+                .andExpect(content().string("Hasła się nie zgadzają!"));
 
         // Weryfikacja, że użytkownik nie został zapisany w bazie danych
         assertThat(userRepository.findByUsername("testuser")).isEmpty();
@@ -123,7 +127,7 @@ public class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
-                .andExpect(content().string("User already exists"));
+                .andExpect(content().string("Użytkownik o podanej nazwie już istnieje"));
 
         // Weryfikacja, że użytkownik nie został nadpisany
         User savedUser = userRepository.findByUsername("testuser").orElse(null);

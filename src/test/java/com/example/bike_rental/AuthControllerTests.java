@@ -63,7 +63,7 @@ class AuthControllerTests {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isOk())
-                                .andExpect(content().string("User registered successfully"));
+                                .andExpect(content().string("Użytkownik pomyslnie zarejestrowany"));
 
                 // Weryfikacja, czy użytkownik został zapisany w repozytorium
                 Mockito.verify(userRepository, Mockito.times(1)).save(Mockito.any(User.class));
@@ -116,7 +116,7 @@ class AuthControllerTests {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isOk())
-                                .andExpect(content().string("Passwords do not match"));
+                                .andExpect(content().string("Hasła się nie zgadzają!"));
 
         }
 
